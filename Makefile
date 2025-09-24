@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2020-2024, Cypress Semiconductor Corporation (an Infineon company)
+# Copyright 2020-2025, Cypress Semiconductor Corporation (an Infineon company)
 # SPDX-License-Identifier: Apache-2.0
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -86,34 +86,38 @@ SOURCES=
 INCLUDES=
 
 HEAP_SIZE=0x11800
-# With XIP=0, the application runs from RAM. 
-# Hence due to memory constraint, we can run only wifi+iperf or bluetooth at a time.
-# With XIP=1, the application runs from flash.
-# Hence we can run wifi+iperf and bluetooth together.
-XIP=0
+
+# App preferred execution memory
+# use flash, psram, or ram
+APPEXEC=ram
 
 DEFINES+=WHD_PRINT_DISABLE
-DEFINES+=TX_PACKET_POOL_SIZE=20
-DEFINES+=RX_PACKET_POOL_SIZE=16
+
 DEFINES+=WCM_WORKER_THREAD_STACK_SIZE=5120
 DEFINES+=SECURE_SOCKETS_THREAD_STACKSIZE=1024
+
+DEFINES+= TX_PACKET_POOL_SIZE=24
+DEFINES+= RX_PACKET_POOL_SIZE=22
+
 # The tcp window size is calculated by number of Rx buffers available
-# total rx buffer available is RX_PACKET_POOL_SIZE(16) - MAX_EVENTBUF_POST(2)
-# therefore tcp window size is ((14 - 1) * 1460)
-DEFINES+=DEFAULT_TCP_WINDOW_SIZE=18980
+# total rx buffer available is RX_PACKET_POOL_SIZE(22) - MAX_EVENTBUF_POST(2)
+# then, tcp window size is ((20 - 2) * 1460), Use 25k as window size to get stable throughput
+DEFINES+= DEFAULT_TCP_WINDOW_SIZE=26280
+
 DEFINES+=DEFAULT_IPERF_SERVER_TIMEOUT_SEC=10
 
 # Add additional defines to the build process (without a leading -D).
 DEFINES+=COMPONENT_WIFI_INTERFACE_OCI CYBSP_WIFI_CAPABLE HAVE_SNPRINTF CY_RTOS_AWARE
 
 # Set CM33 clock frequency
-DEFINES += H1CP_CLOCK_FREQ=96000000
+DEFINES += APP_CFG_ENABLE_MAX_SYS_FREQ_192MHz=1
+DEFINES += CPU_CLOCK_FREQUENCY=192000000
 
 DEFINES += DISABLE_COMMAND_CONSOLE_BT
-ifeq ($(XIP),0)
+ifeq ($(APPEXEC),ram)
 ifeq ($(filter DISABLE_COMMAND_CONSOLE_BT, $(DEFINES)),)
 ifeq ($(filter DISABLE_COMMAND_CONSOLE_WIFI, $(DEFINES)),)
-$(error With XIP=0, either Wi-Fi or Bluetooth commands can be executed due to memory constraint. Add DISABLE_COMMAND_CONSOLE_BT or DISABLE_COMMAND_CONSOLE_WIFI to DEFINES to continue the build. To run both Wi-Fi and Bluetooth commands, set XIP=1.)
+$(error With APPEXEC=ram, either Wi-Fi or Bluetooth commands can be executed due to memory constraint. Add DISABLE_COMMAND_CONSOLE_BT or DISABLE_COMMAND_CONSOLE_WIFI to DEFINES to continue the build. To run both Wi-Fi and Bluetooth commands, set APPEXEC=flash.)
 endif
 ifeq ($(filter DISABLE_COMMAND_CONSOLE_IPERF, $(DEFINES)),)
 $(error When Wi-Fi is disabled, iperf should also be disabled as network traffic cannot be run. Add DISABLE_COMMAND_CONSOLE_IPERF to DEFINES in Makefile.)

@@ -261,6 +261,7 @@ Document title: Wi-Fi Bluetooth&reg; tester
 
 | Version | Description of change |
 | ------- | --------------------- |
+| 1.1.0   | Tuned parameters for performance |
 | 1.0.0   | This is the first version of the application. |
 
 <br />

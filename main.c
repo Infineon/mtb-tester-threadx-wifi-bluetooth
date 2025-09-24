@@ -1,5 +1,5 @@
 /*
- * Copyright 2024, Cypress Semiconductor Corporation (an Infineon company) or
+ * Copyright 2025, Cypress Semiconductor Corporation (an Infineon company) or
  * an affiliate of Cypress Semiconductor Corporation.  All rights reserved.
  *
  * This software, including source code, documentation and related
@@ -80,9 +80,9 @@ static char command_history_buffer[CONSOLE_COMMAND_MAX_LENGTH * CONSOLE_COMMAND_
 #define WDT_TIMEOUT_MS                   (4000)
 #define CY_RSLT_ERROR                    ( -1 )
 
-#if defined(H1CP_CLOCK_FREQ)
+#if defined(CPU_CLOCK_FREQUENCY)
 #if (CYHAL_API_VERSION >= 2)
-cy_rslt_t set_cpu_clock_cp ( uint32_t freq, cyhal_clock_t *obj );
+static cy_rslt_t set_cpu_clock ( uint32_t freq, cyhal_clock_t *obj );
 #endif
 #endif
 
@@ -243,7 +243,7 @@ static void console_task(cy_thread_arg_t arg)
 int main(void)
 {
     cy_rslt_t result ;
-#if defined(H1CP_CLOCK_FREQ)
+#if defined(CPU_CLOCK_FREQUENCY)
     cyhal_clock_t obj;
 #endif
 
@@ -258,8 +258,8 @@ int main(void)
     /* Enable global interrupts */
     __enable_irq();
 
-#ifdef COMPONENT_CAT5
-    /* For H1CP, the BTSS sleep is enabled by default.
+#ifdef COMPONENT_55900
+    /* For CYW55913, the BTSS sleep is enabled by default.
      * command-console will not work with sleep enabled as wake on uart is not enabled.
      * Once wake on uart is enabled, the sleep lock can be removed.
      * mtb-tester-threadx-wifi-bluetooth application will not operate in low power mode until wake on uart is enabled.
@@ -267,10 +267,10 @@ int main(void)
     cyhal_syspm_lock_deepsleep();
 #endif
 
-#if defined(H1CP_CLOCK_FREQ)
+#if defined(CPU_CLOCK_FREQUENCY)
 #if (CYHAL_API_VERSION >= 2)
-    /* set CPU clock to H1CP_CLOCK_FREQ */
-    result = set_cpu_clock_cp(H1CP_CLOCK_FREQ, &obj);
+    /* set CPU clock to CPU_CLOCK_FREQUENCY */
+    result = set_cpu_clock(CPU_CLOCK_FREQUENCY, &obj);
     CY_ASSERT(result == CY_RSLT_SUCCESS) ;
 #endif
 #endif
@@ -296,9 +296,9 @@ int main(void)
     return 0;
 }
 
-#if defined(H1CP_CLOCK_FREQ)
+#if defined(CPU_CLOCK_FREQUENCY)
 #if (CYHAL_API_VERSION >= 2)
-cy_rslt_t set_cpu_clock_cp ( uint32_t freq, cyhal_clock_t *obj )
+static cy_rslt_t set_cpu_clock ( uint32_t freq, cyhal_clock_t *obj )
 {
     cy_rslt_t rslt;
 
